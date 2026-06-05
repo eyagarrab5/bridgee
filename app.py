@@ -218,7 +218,7 @@ def server_error(e):
 
 with app.app_context():
     db.create_all()
-    seed_masterclacsses()
+    seed_masterclasses()
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=5000)
