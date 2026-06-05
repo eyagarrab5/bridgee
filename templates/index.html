@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE BRIDGE 2026 — Attendee Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- ── Top nav ── -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">TB</div>
+    <div class="logo-text">THE <span>BRIDGE</span> 2026</div>
+  </div>
+  <nav class="nav">
+    <a href="{{ url_for('index') }}" class="active">Directory</a>
+    <a href="{{ url_for('masterclasses') }}">Masterclasses</a>
+  </nav>
+  <div class="event-chip"><i class="ti ti-map-pin"></i> 8 Juin · Radisson Blu Tunis</div>
+</header>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-badge"><i class="ti ti-users"></i> Attendee Portal</div>
+  <h1>Attendee Directory</h1>
+  <p>Add participants, generate LinkedIn QR codes, and explore today's sessions.</p>
+  <div class="stats-row">
+    <div class="stat"><span class="stat-n">{{ counts.total }}</span><span class="stat-l">Total</span></div>
+    <div class="stat-div"></div>
+    <div class="stat"><span class="stat-n purple">{{ counts.masterclass }}</span><span class="stat-l">Masterclass</span></div>
+    <div class="stat-div"></div>
+    <div class="stat"><span class="stat-n blue">{{ counts.vip }}</span><span class="stat-l">VIP</span></div>
+    <div class="stat-div"></div>
+    <div class="stat"><span class="stat-n green">{{ counts.participant }}</span><span class="stat-l">Participant</span></div>
+  </div>
+</section>
+
+<!-- ── Flash messages ── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+    <div class="flash flash-{{ cat }}">
+      <i class="ti ti-{% if cat == 'success' %}circle-check{% elif cat == 'error' %}alert-circle{% else %}info-circle{% endif %}"></i>
+      {{ msg }}
+    </div>
+  {% endfor %}
+{% endwith %}
+
+<!-- ── Main layout ── -->
+<div class="main">
+
+  <!-- Sidebar form -->
+  <aside class="sidebar">
+    <h3>Add Attendee</h3>
+    <form action="{{ url_for('add_attendee') }}" method="POST" enctype="multipart/form-data" id="addForm">
+
+      <div class="form-group">
+        <label for="name">Full name</label>
+        <input type="text" id="name" name="name" placeholder="Dr. Amine Hamdi" required>
+      </div>
+
+      <div class="form-group">
+        <label>Photo</label>
+        <div class="upload-box" id="uploadBox" onclick="document.getElementById('photoInput').click()">
+          <i class="ti ti-camera" id="uploadIcon"></i>
+          <span id="uploadLabel">Upload or drag a photo</span>
+          <img id="photoPreview" src="" alt="" style="display:none; width:80px; height:80px; border-radius:50%; object-fit:cover; margin:8px auto 0;">
+        </div>
+        <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none">
+      </div>
+
+      <div class="form-group">
+        <label for="linkedin">LinkedIn URL</label>
+        <div class="input-icon-wrap">
+          <i class="ti ti-brand-linkedin input-icon"></i>
+          <input type="text" id="linkedin" name="linkedin" placeholder="linkedin.com/in/yourname" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Category</label>
+        <div class="cat-row">
+          <label class="cat-btn mc">
+            <input type="radio" name="category" value="masterclass"> Masterclass
+          </label>
+          <label class="cat-btn vip">
+            <input type="radio" name="category" value="vip" checked> VIP
+          </label>
+          <label class="cat-btn part">
+            <input type="radio" name="category" value="participant"> Participant
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <i class="ti ti-qrcode"></i> Generate QR & Add
+      </button>
+    </form>
+  </aside>
+
+  <!-- Directory -->
+  <main class="content">
+    <div class="section-row">
+      <h2>All Attendees</h2>
+      <div class="filter-row">
+        <button class="filter-btn active" data-cat="all">All</button>
+        <button class="filter-btn" data-cat="masterclass">Masterclass</button>
+        <button class="filter-btn" data-cat="vip">VIP</button>
+        <button class="filter-btn" data-cat="participant">Participant</button>
+      </div>
+    </div>
+
+    {% if attendees %}
+    <div class="attendee-grid" id="attendeeGrid">
+      {% for a in attendees %}
+      <div class="acard" data-cat="{{ a.category }}">
+        <div class="badge {{ a.category }}">{{ a.category | title }}</div>
+
+        {% if a.photo %}
+          <img src="{{ url_for('static', filename=a.photo) }}" class="avatar-img" alt="{{ a.name }}">
+        {% else %}
+          <div class="avatar av-{{ a.category }}">{{ a.name[:2].upper() }}</div>
+        {% endif %}
+
+        <h4>{{ a.name }}</h4>
+        <p class="linkedin-text">{{ a.linkedin | replace('https://','') | replace('http://','') | truncate(32) }}</p>
+
+        {% if a.qr_code %}
+          <div class="qr-wrap">
+            <img src="{{ url_for('static', filename=a.qr_code) }}" alt="QR code for {{ a.name }}" width="64" height="64">
+          </div>
+        {% endif %}
+
+        <a href="{{ a.linkedin }}" target="_blank" rel="noopener" class="ln-link">
+          <i class="ti ti-brand-linkedin"></i> LinkedIn
+        </a>
+
+        <form action="{{ url_for('delete_attendee', id=a.id) }}" method="POST"
+              onsubmit="return confirm('Remove {{ a.name }}?')">
+          <button type="submit" class="del-btn" title="Remove attendee">
+            <i class="ti ti-trash"></i>
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="ti ti-users-group"></i>
+      <p>No attendees yet. Be the first to add one!</p>
+    </div>
+    {% endif %}
+
+    <!-- Masterclass teaser -->
+    <div class="section-row" style="margin-top:2.5rem">
+      <h2>Today's Masterclasses</h2>
+      <a href="{{ url_for('masterclasses') }}" class="see-all">See all <i class="ti ti-arrow-right"></i></a>
+    </div>
+
+    <div class="mc-preview-grid">
+      {% for mc in masterclasses %}
+      <div class="mc-preview-card">
+        <div class="mc-num">{{ loop.index }}</div>
+        <div>
+          <h4>{{ mc.title }}</h4>
+          <div class="mc-meta-row">
+            <span class="mc-tag"><i class="ti ti-clock"></i> {{ mc.time_slot }}</span>
+            <span class="mc-tag"><i class="ti ti-map-pin"></i> {{ mc.room }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+</div>
+
+<script>
+// Photo preview
+document.getElementById('photoInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photoPreview').src = e.target.result;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('uploadIcon').style.display = 'none';
+    document.getElementById('uploadLabel').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Drag-over upload box
+const box = document.getElementById('uploadBox');
+box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag-over'); });
+box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
+box.addEventListener('drop', e => {
+  e.preventDefault(); box.classList.remove('drag-over');
+  const dt = e.dataTransfer;
+  if (dt.files.length) {
+    document.getElementById('photoInput').files = dt.files;
+    document.getElementById('photoInput').dispatchEvent(new Event('change'));
+  }
+});
+
+// Category radio highlight
+document.querySelectorAll('.cat-btn input').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    radio.parentElement.classList.add('selected');
+  });
+});
+// Set initial selected state
+document.querySelector('.cat-btn input:checked')?.parentElement.classList.add('selected');
+
+// Filter attendees
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.acard').forEach(card => {
+      card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+    });
+  });
+});
+</script>
+</body>
+</html>

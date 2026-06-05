@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masterclasses — THE BRIDGE 2026</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">TB</div>
+    <div class="logo-text">THE <span>BRIDGE</span> 2026</div>
+  </div>
+  <nav class="nav">
+    <a href="{{ url_for('index') }}">Directory</a>
+    <a href="{{ url_for('masterclasses') }}" class="active">Masterclasses</a>
+  </nav>
+  <div class="event-chip"><i class="ti ti-map-pin"></i> 8 Juin · Radisson Blu Tunis</div>
+</header>
+
+<section class="hero">
+  <div class="hero-badge"><i class="ti ti-school"></i> Sessions du jour</div>
+  <h1>Masterclasses</h1>
+  <p>Deep-dive sessions led by industry experts — choose what resonates with you.</p>
+</section>
+
+<div class="mc-page-wrap">
+  {% for mc in masterclasses %}
+  <div class="mc-full-card">
+
+    <div class="mc-full-header">
+      <div class="mc-num-lg">{{ loop.index }}</div>
+      <div class="mc-full-meta">
+        <h2>{{ mc.title }}</h2>
+        <div class="mc-meta-row">
+          <span class="mc-tag"><i class="ti ti-user"></i> {{ mc.speaker }}</span>
+          <span class="mc-tag"><i class="ti ti-clock"></i> {{ mc.time_slot }}</span>
+          <span class="mc-tag"><i class="ti ti-map-pin"></i> {{ mc.room }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mc-full-body">
+      <div class="mc-description">
+        <p>{{ mc.description }}</p>
+        {% if mc.takeaway %}
+        <div class="takeaway-box">
+          <i class="ti ti-bolt"></i>
+          <div>
+            <span class="takeaway-label">Key takeaway</span>
+            <p>{{ mc.takeaway }}</p>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if mc.video_url %}
+      <div class="video-section">
+        <div class="video-label"><i class="ti ti-player-play"></i> Preview</div>
+        <div class="video-frame">
+          <iframe src="{{ mc.video_url }}"
+                  title="{{ mc.title }}"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen></iframe>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+</body>
+</html>
