@@ -330,11 +330,30 @@ def edit_attendee(id):
 
     if request.method == "POST":
         attendee.name = request.form.get("name", "").strip()
-        attendee.linkedin = request.form.get("linkedin", "").strip()
+        new_linkedin = request.form.get("linkedin", "").strip()
         attendee.category = request.form.get("category", "participant").strip()
 
-        if not attendee.linkedin.startswith("http"):
-            attendee.linkedin = "https://" + attendee.linkedin
+        if not new_linkedin.startswith("http"):
+            new_linkedin = "https://" + new_linkedin
+
+        # Régénérer le QR code si le LinkedIn a changé
+        if new_linkedin != attendee.linkedin:
+            attendee.linkedin = new_linkedin
+            # Supprimer l'ancien QR code fichier
+            if attendee.qr_code:
+                old_qr = os.path.join(BASE_DIR, "static", attendee.qr_code)
+                if os.path.exists(old_qr):
+                    os.remove(old_qr)
+            # Générer le nouveau QR code pointant vers le nouveau LinkedIn
+            qr_path = generate_qr_file(new_linkedin, uuid.uuid4().hex)
+            if qr_path:
+                attendee.qr_code = qr_path
+                attendee.qr_base64 = None
+            else:
+                attendee.qr_code = None
+                attendee.qr_base64 = generate_qr_base64(new_linkedin)
+        else:
+            attendee.linkedin = new_linkedin
 
         if 'photo' in request.files:
             file = request.files['photo']
