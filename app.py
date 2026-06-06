@@ -61,7 +61,7 @@ class Masterclass(db.Model):
     title = db.Column(db.String(200), nullable=False)
     speaker = db.Column(db.String(120), nullable=False)
     time_slot = db.Column(db.String(60), nullable=False)
-    room = db.Column(db.String(60), nullable=False)
+    room = db.Column(db.String(60), nullable=True)
     description = db.Column(db.Text, nullable=False)
     takeaway = db.Column(db.String(300), nullable=True)
     video_url = db.Column(db.String(300), nullable=True)
@@ -147,15 +147,18 @@ def generate_qr_base64(linkedin_url):
         return None
 
 def seed_masterclasses():
-    if Masterclass.query.count() == 0:
-        sessions = [
-            Masterclass(title="Crowdfunding dans le secteur OneHealth", speaker="Me. Mohamed ben hmida", time_slot="16:00", room="Salle Atlas", description="Découvrez comment le financement participatif peut booster les projets OneHealth en Tunisie.", takeaway="Les clés pour lancer une campagne de crowdfunding réussie.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
-            Masterclass(title="One Health, Green Biotechnology & Nano Innovation", speaker="Hedya Jemai & Roua Ben Dassi", time_slot="16:00", room="Salle Médina", description="Explorez l'intersection entre biotechnologie verte, nano-innovation et santé préventive.", takeaway="Comprendre comment les nouvelles technologies peuvent prévenir les crises sanitaires.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
-            Masterclass(title="The Missing Radiologist - AI, Imaging Biobanks", speaker="Dr. Oumaima Laifa", time_slot="16:00", room="Salle Carthage", description="Comment l'IA peut combler le manque de radiologues en Afrique.", takeaway="Les opportunités de l'IA pour la radiologie en Afrique.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
-            Masterclass(title="Tunisian Startup Survival Roadmap", speaker="Mohamed Amine Khiari", time_slot="16:00", room="Salle principale", description="Le parcours de survie des startups tunisiennes inspiré de la Silicon Valley.", takeaway="Une feuille de route claire pour réussir sa startup.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
-        ]
-        db.session.add_all(sessions)
-        db.session.commit()
+    # Toujours supprimer et réinsérer pour refléter les modifications de app.py
+    Masterclass.query.delete()
+    db.session.commit()
+    sessions = [
+        Masterclass(title="Crowdfunding dans le secteur OneHealth", speaker="Mr Mohamed ben hmida & Mr Arnaud Poisonnier", time_slot="16:00", description="Découvrez comment le financement participatif peut booster les projets OneHealth en Tunisie.", takeaway="Les clés pour lancer une campagne de crowdfunding réussie.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+        Masterclass(title="One Health, Green Biotechnology & Nano Innovation", speaker="Ms Hedya Jemai & Ms Roua Ben Dassi & Ms Rim Chawachi", time_slot="16:00", description="Explorez l'intersection entre biotechnologie verte, nano-innovation et santé préventive.", takeaway="Comprendre comment les nouvelles technologies peuvent prévenir les crises sanitaires.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+        Masterclass(title="The Missing Radiologist - AI, Imaging Biobanks", speaker="Ms Oumaima Laifa", time_slot="16:00", description="Comment l'IA peut combler le manque de radiologues en Afrique.", takeaway="Les opportunités de l'IA pour la radiologie en Afrique.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+        Masterclass(title="Tunisian Startup Survival Roadmap", speaker="Mr Mohamed Amine Khiari", time_slot="16:00", description="Le parcours de survie des startups tunisiennes inspiré de la Silicon Valley.", takeaway="Une feuille de route claire pour réussir sa startup.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+    ]
+    db.session.add_all(sessions)
+    db.session.commit()
+
 
 def create_admin():
     admin = User.query.filter_by(username="admin").first()

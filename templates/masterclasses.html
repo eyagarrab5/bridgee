@@ -29,7 +29,7 @@
             <div class="card-body">
                 <div class="info-badges">
                     <span class="info-badge time"><i class="far fa-clock"></i> {{ m.time_slot }}</span>
-                    <span class="info-badge room"><i class="fas fa-map-marker-alt"></i> {{ m.room }}</span>
+                    {% if m.room %}<span class="info-badge room"><i class="fas fa-map-marker-alt"></i> {{ m.room }}</span>{% endif %}
                 </div>
                 <p class="description">{{ m.description }}</p>
                 <div class="takeaway">
