@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Mon Profil - Bridge Health Summit{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-logo">MON <span>PROFIL</span></div>
+            <div class="hero-tagline">Gérez vos informations</div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="form-wrapper" style="max-width: 600px; margin: 40px auto;">
+        <div class="section-title">
+            <i class="fas fa-user-circle"></i>
+            Mes informations
+        </div>
+        
+        <div class="info-card">
+            <p><strong><i class="fas fa-user"></i> Nom d'utilisateur :</strong> {{ user.username }}</p>
+            <p><strong><i class="fas fa-envelope"></i> Email :</strong> {{ user.email }}</p>
+            <p><strong><i class="fas fa-calendar"></i> Membre depuis :</strong> {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'Nouveau' }}</p>
+            <p><strong><i class="fas fa-tag"></i> Rôle :</strong> 
+                {% if user.is_admin %}
+                    <span class="badge-vip">👑 Administrateur</span>
+                {% else %}
+                    <span class="badge-participant">👤 Utilisateur standard</span>
+                {% endif %}
+            </p>
+        </div>
+        
+        {% if not user.is_admin and my_attendees %}
+        <div class="section-title mt-4">
+            <i class="fas fa-users"></i>
+            Mes participants ajoutés ({{ my_attendees|length }})
+        </div>
+        
+        <div class="my-attendees-list">
+            {% for attendee in my_attendees %}
+            <div class="attendee-item">
+                <div class="attendee-info">
+                    <strong>{{ attendee.name }}</strong>
+                    <span class="badge-custom badge-{{ attendee.category }}">{{ attendee.category }}</span>
+                </div>
+                <div class="attendee-actions">
+                    <a href="/edit/{{ attendee.id }}" class="btn-edit"><i class="fas fa-edit"></i> Modifier</a>
+                    <form method="POST" action="/delete/{{ attendee.id }}" style="display: inline;">
+                        <button type="submit" class="btn-delete-small" onclick="return confirm('Supprimer {{ attendee.name }} ?')">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif not user.is_admin and not my_attendees %}
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle"></i> Vous n'avez pas encore ajouté de participants.
+            <a href="/">Ajoutez-en dès maintenant !</a>
+        </div>
+        {% endif %}
+        
+        {% if user.is_admin %}
+        <div class="alert alert-warning mt-3">
+            <i class="fas fa-crown"></i> <strong>Mode Administrateur</strong><br>
+            Vous avez accès à toutes les modifications sur le site.
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="footer" style="margin-top: 0;">
+        <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> Retour à l'accueil</a>
+    </div>
+</div>
+
+<style>
+    .form-wrapper {
+        background: white;
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: var(--shadow);
+    }
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 20px 0 20px;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .info-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+    .info-card p {
+        margin-bottom: 10px;
+    }
+    .badge-vip {
+        background: linear-gradient(135deg, #F0A500, #E67E22);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    .badge-participant {
+        background: #e5e7eb;
+        color: #374151;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    .my-attendees-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .attendee-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .attendee-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .badge-custom {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    .badge-vip { background: linear-gradient(135deg, #F0A500, #E67E22); color: white; }
+    .badge-masterclass { background: linear-gradient(135deg, #00A896, #02C39A); color: white; }
+    .badge-participant { background: #e5e7eb; color: #374151; }
+    .btn-edit {
+        background: #0A66C2;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .btn-delete-small {
+        background: none;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+    }
+    .btn-back {
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 40px;
+        padding: 10px 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .alert {
+        padding: 15px;
+        border-radius: 12px;
+    }
+    .alert-info { background: #e3f2fd; color: #1976d2; }
+    .alert-warning { background: #fff3e0; color: #f57c00; }
+    @media (max-width: 768px) {
+        .attendee-item { flex-direction: column; align-items: stretch; }
+        .attendee-actions { display: flex; gap: 10px; justify-content: center; }
+    }
+</style>
+
+{% endblock %}

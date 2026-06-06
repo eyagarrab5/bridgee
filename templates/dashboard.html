@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Admin - Bridge Health Summit{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-logo">ADMIN <span>DASHBOARD</span></div>
+            <div class="hero-tagline">Gérez tous les participants</div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <!-- STATISTIQUES -->
+    <div class="stats-section">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-number">{{ counts.total }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-chalkboard-user"></i></div>
+                    <div class="stat-number">{{ counts.masterclass }}</div>
+                    <div class="stat-label">Masterclass</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-crown"></i></div>
+                    <div class="stat-number">{{ counts.vip }}</div>
+                    <div class="stat-label">VIP</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user"></i></div>
+                    <div class="stat-number">{{ counts.participant }}</div>
+                    <div class="stat-label">Participants</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTE DES PARTICIPANTS -->
+    <div class="section-title">
+        <i class="fas fa-address-book"></i>
+        Tous les participants
+    </div>
+
+    <div class="participants-grid">
+        {% for attendee in attendees %}
+        <div class="participant-card">
+            {% if attendee.photo %}
+                <img src="{{ url_for('static', filename=attendee.photo) }}" class="card-image" loading="lazy" decoding="async">
+            {% else %}
+                <div class="card-placeholder">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            {% endif %}
+            <div class="card-content">
+                <div class="participant-name">{{ attendee.name }}</div>
+                {% if attendee.category == 'vip' %}
+                    <span class="badge-custom badge-vip"><i class="fas fa-crown"></i> VIP</span>
+                {% elif attendee.category == 'masterclass' %}
+                    <span class="badge-custom badge-masterclass"><i class="fas fa-chalkboard"></i> Masterclass</span>
+                {% else %}
+                    <span class="badge-custom badge-participant"><i class="fas fa-user"></i> Participant</span>
+                {% endif %}
+
+                {% if attendee.display_qr %}
+                <div class="qr-wrapper">
+                    <img src="{{ attendee.display_qr }}" class="qr-code">
+                    <span class="qr-label"><i class="fas fa-camera"></i> Scannez avec votre téléphone</span>
+                </div>
+                {% endif %}
+
+                <div>
+                    <a href="{{ attendee.linkedin }}" target="_blank" class="btn-linkedin">
+                        <i class="fab fa-linkedin"></i> Profil
+                    </a>
+                    <a href="/edit/{{ attendee.id }}" class="btn-edit">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <form method="POST" action="/delete/{{ attendee.id }}" style="display: inline;">
+                        <button type="submit" class="btn-delete" onclick="return confirm('Supprimer {{ attendee.name }} ?')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <a href="/" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Retour à l'accueil
+        </a>
+        <p class="text-muted mt-3 mb-0 small">© Bridge Health Summit 2026</p>
+    </div>
+</div>
+
+<style>
+    .stats-section { margin: 30px 0; }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-icon { font-size: 2rem; color: var(--secondary); margin-bottom: 10px; }
+    .stat-number { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.9rem; color: #666; }
+    .participants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin: 30px 0; }
+    .participant-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .participant-card:hover { transform: translateY(-5px); }
+    .card-image { width: 100%; height: 250px; object-fit: contain; background: #f8f9fa; padding: 10px; }
+    .card-placeholder { width: 100%; height: 250px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #ccc; }
+    .card-content { padding: 15px; }
+    .participant-name { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .badge-custom { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; margin-bottom: 10px; }
+    .badge-vip { background: #fef3c7; color: #d97706; }
+    .badge-masterclass { background: #dbeafe; color: #2563eb; }
+    .badge-participant { background: #e5e7eb; color: #4b5563; }
+    .qr-wrapper { text-align: center; margin: 10px 0; }
+    .qr-code { width: 100px; height: 100px; border-radius: 8px; }
+    .qr-label { font-size: 0.7rem; color: #666; display: block; margin-top: 5px; }
+    .btn-linkedin { background: #0077b5; color: white; padding: 6px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; margin-right: 5px; }
+    .btn-edit { background: #0A66C2; color: white; padding: 6px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; margin-right: 5px; }
+    .btn-delete { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+    @media (max-width: 768px) {
+        .participants-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+{% endblock %}

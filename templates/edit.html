@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier Participant - Bridge Health Summit{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-logo">MODIFIER <span>PARTICIPANT</span></div>
+            <div class="hero-tagline">Mettez à jour les informations</div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <div class="form-wrapper" style="max-width: 600px;">
+        <div class="section-title">
+            <i class="fas fa-edit"></i>
+            Modifier {{ attendee.name }}
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">Nom complet</label>
+                <input type="text" name="name" class="form-control" required value="{{ attendee.name }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">URL LinkedIn</label>
+                <input type="url" name="linkedin" class="form-control" required value="{{ attendee.linkedin }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Catégorie</label>
+                <select name="category" class="form-control">
+                    <option value="participant" {% if attendee.category == 'participant' %}selected{% endif %}>👤 Participant</option>
+                    <option value="masterclass" {% if attendee.category == 'masterclass' %}selected{% endif %}>🎓 Masterclass</option>
+                    <option value="vip" {% if attendee.category == 'vip' %}selected{% endif %}>👑 VIP</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Photo (optionnel)</label>
+                <input type="file" name="photo" class="form-control" accept="image/*">
+                <small class="text-muted">Laissez vide pour conserver l'actuelle</small>
+                {% if attendee.photo %}
+                <div style="margin-top: 10px;">
+                    <img src="{{ url_for('static', filename=attendee.photo) }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                </div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn-submit w-100">
+                <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+        </form>
+        
+        <div class="text-center mt-3">
+            <a href="/profile" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Retour au profil
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

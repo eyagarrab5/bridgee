@@ -1,9 +1,12 @@
 import os, uuid, logging, io, base64
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import qrcode
 from PIL import Image
+from functools import wraps
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "bridge2026secret-change-in-prod")
@@ -26,7 +29,22 @@ db = SQLAlchemy(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Modèles
+# ========== MODÈLES ==========
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 class Attendee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -35,6 +53,8 @@ class Attendee(db.Model):
     photo = db.Column(db.String(200), nullable=True)
     qr_code = db.Column(db.String(200), nullable=True)
     qr_base64 = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_by = db.relationship('User', backref='attendees')
 
 class Masterclass(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -46,44 +66,53 @@ class Masterclass(db.Model):
     takeaway = db.Column(db.String(300), nullable=True)
     video_url = db.Column(db.String(300), nullable=True)
 
-# Fonctions
+# ========== DÉCORATEURS ==========
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Veuillez vous connecter pour accéder à cette page.", "warning")
+            return redirect(url_for('signup'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Veuillez vous connecter.", "warning")
+            return redirect(url_for('signup'))
+        user = User.query.get(session['user_id'])
+        if not user or not user.is_admin:
+            flash("Accès non autorisé. Droits administrateur requis.", "danger")
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ========== FONCTIONS ==========
+
 def compress_and_save_photo(file):
-    """Version rapide - compression légère uniquement"""
     try:
         if not file or file.filename == '':
             return None
-        
-        img = Image.open(file)
-        
-        # Correction rapide orientation (nécessaire sinon photos à l'envers)
-        try:
-            from PIL import ImageOps
-            img = ImageOps.exif_transpose(img)
-        except:
-            pass
-        
-        # Conversion rapide
-        if img.mode != 'RGB':
-            img = img.convert('RGB')
-        
-        # Réduire UNIQUEMENT si la photo est géante (> 2000px)
-        if max(img.size) > 2000:
-            ratio = 2000 / max(img.size)
-            new_size = tuple(int(dim * ratio) for dim in img.size)
-            img = img.resize(new_size, Image.Resampling.LANCZOS)
-        
-        # Compression rapide avec qualité moyenne
-        buffer = io.BytesIO()
-        img.save(buffer, format='JPEG', quality=75, optimize=True)
-        
         fname = f"{uuid.uuid4().hex}.jpg"
         dest_path = os.path.join(UPLOAD_DIR, fname)
         
-        with open(dest_path, 'wb') as f:
-            f.write(buffer.getvalue())
+        # Ouvrir l'image et la redimensionner
+        img = Image.open(file)
+        
+        # Convertir en RGB si nécessaire
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Redimensionner pour mobile (max 400x400)
+        img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+        
+        # Sauvegarder avec compression élevée pour mobile
+        img.save(dest_path, 'JPEG', quality=70, optimize=True)
         
         return f"uploads/{fname}"
-        
     except Exception as e:
         logger.error(f"Photo error: {e}")
         return None
@@ -120,16 +149,96 @@ def generate_qr_base64(linkedin_url):
 def seed_masterclasses():
     if Masterclass.query.count() == 0:
         sessions = [
-            Masterclass(title="AI Diagnostics in Clinical Practice", speaker="Dr. Sana Rekik", time_slot="10:00 – 11:30", room="Salle Atlas", description="Discover how machine learning models are reshaping radiology and pathology workflows.", takeaway="Deploy AI tools that assist clinicians with measurable outcomes.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
-            Masterclass(title="Health Data Monetisation & Compliance", speaker="Me. Amine Hamdi", time_slot="13:00 – 14:30", room="Salle Médina", description="Learn the legal frameworks and technical architecture for healthcare data monetisation.", takeaway="Structure a compliant, investor-ready health data product in 3 steps.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
-            Masterclass(title="Digital Therapeutics & Remote Patient Monitoring", speaker="Dr. Mohamed Ben Salah", time_slot="15:00 – 16:30", room="Salle Carthage", description="Explore the rapidly growing market of prescription digital therapeutics and connected devices.", takeaway="Identify the top 3 digital therapeutic categories with validated reimbursement paths.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+            Masterclass(title="Crowdfunding dans le secteur OneHealth", speaker="Me. Mohamed ben hmida", time_slot="16:00", room="Salle Atlas", description="Découvrez comment le financement participatif peut booster les projets OneHealth en Tunisie.", takeaway="Les clés pour lancer une campagne de crowdfunding réussie.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+            Masterclass(title="One Health, Green Biotechnology & Nano Innovation", speaker="Hedya Jemai & Roua Ben Dassi", time_slot="16:00", room="Salle Médina", description="Explorez l'intersection entre biotechnologie verte, nano-innovation et santé préventive.", takeaway="Comprendre comment les nouvelles technologies peuvent prévenir les crises sanitaires.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+            Masterclass(title="The Missing Radiologist - AI, Imaging Biobanks", speaker="Dr. Oumaima Laifa", time_slot="16:00", room="Salle Carthage", description="Comment l'IA peut combler le manque de radiologues en Afrique.", takeaway="Les opportunités de l'IA pour la radiologie en Afrique.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
+            Masterclass(title="Tunisian Startup Survival Roadmap", speaker="Mohamed Amine Khiari", time_slot="16:00", room="Salle principale", description="Le parcours de survie des startups tunisiennes inspiré de la Silicon Valley.", takeaway="Une feuille de route claire pour réussir sa startup.", video_url="https://www.youtube.com/embed/dQw4w9WgXcQ"),
         ]
         db.session.add_all(sessions)
         db.session.commit()
 
-# Routes
-@app.route("/")
-def index():
+def create_admin():
+    admin = User.query.filter_by(username="admin").first()
+    if not admin:
+        admin = User(username="admin", email="admin@bridge.com", is_admin=True)
+        admin.set_password("admin")
+        db.session.add(admin)
+        db.session.commit()
+        logger.info("Admin créé: username='admin', password='admin'")
+
+# ========== ROUTES AUTH ==========
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['is_admin'] = user.is_admin
+            flash(f"Bienvenue {username} !", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("Nom d'utilisateur ou mot de passe incorrect.", "danger")
+    
+    return render_template("login.html")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+        
+        if not username or not email or not password:
+            flash("Tous les champs sont obligatoires.", "danger")
+            return redirect(url_for('signup'))
+        
+        if password != confirm_password:
+            flash("Les mots de passe ne correspondent pas.", "danger")
+            return redirect(url_for('signup'))
+        
+        if User.query.filter_by(username=username).first():
+            flash("Ce nom d'utilisateur est déjà pris.", "danger")
+            return redirect(url_for('signup'))
+        
+        if User.query.filter_by(email=email).first():
+            flash("Cet email est déjà utilisé.", "danger")
+            return redirect(url_for('signup'))
+        
+        user = User(username=username, email=email, is_admin=False)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        
+        flash("Compte créé avec succès ! Connectez-vous maintenant.", "success")
+        return redirect(url_for('login'))
+    
+    return render_template("signup.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Vous avez été déconnecté.", "info")
+    return redirect(url_for('signup'))
+
+@app.route("/profile")
+@login_required
+def profile():
+    user = User.query.get(session['user_id'])
+    if user.is_admin:
+        return redirect(url_for('dashboard'))
+    my_attendees = Attendee.query.filter_by(user_id=user.id).all()
+    return render_template("profile.html", user=user, my_attendees=my_attendees)
+
+@app.route("/dashboard")
+@login_required
+@admin_required
+def dashboard():
     attendees = Attendee.query.order_by(Attendee.id.desc()).all()
     masterclasses = Masterclass.query.all()
     for attendee in attendees:
@@ -145,80 +254,148 @@ def index():
         "vip": Attendee.query.filter_by(category="vip").count(),
         "participant": Attendee.query.filter_by(category="participant").count(),
     }
-    return render_template("index.html", attendees=attendees, masterclasses=masterclasses, counts=counts)
+    return render_template("dashboard.html", attendees=attendees, masterclasses=masterclasses, counts=counts, session=session)
+
+# ========== ROUTES CRUD ==========
+
+@app.route("/")
+def index():
+    if 'user_id' not in session:
+        return redirect(url_for('signup'))
+    attendees = Attendee.query.order_by(Attendee.id.desc()).all()
+    masterclasses = Masterclass.query.all()
+    for attendee in attendees:
+        if attendee.qr_code:
+            attendee.display_qr = url_for('static', filename=attendee.qr_code)
+        elif attendee.qr_base64:
+            attendee.display_qr = attendee.qr_base64
+        else:
+            attendee.display_qr = None
+    counts = {
+        "total": Attendee.query.count(),
+        "masterclass": Attendee.query.filter_by(category="masterclass").count(),
+        "vip": Attendee.query.filter_by(category="vip").count(),
+        "participant": Attendee.query.filter_by(category="participant").count(),
+    }
+    return render_template("index.html", attendees=attendees, masterclasses=masterclasses, counts=counts, session=session)
 
 @app.route("/add", methods=["POST"])
+@login_required
 def add_attendee():
     name = request.form.get("name", "").strip()
     linkedin = request.form.get("linkedin", "").strip()
     category = request.form.get("category", "participant").strip()
+    
     if not name or not linkedin:
         flash("Le nom et l'URL LinkedIn sont obligatoires.", "error")
         return redirect(url_for("index"))
+    
     if not linkedin.startswith("http"):
         linkedin = "https://" + linkedin
+    
     photo_path = None
     if 'photo' in request.files:
         file = request.files['photo']
         if file and file.filename != '':
             photo_path = compress_and_save_photo(file)
+    
     qr_path = generate_qr_file(linkedin, uuid.uuid4().hex)
     qr_base64 = None
     if not qr_path:
         qr_base64 = generate_qr_base64(linkedin)
-    attendee = Attendee(name=name, linkedin=linkedin, category=category, photo=photo_path, qr_code=qr_path, qr_base64=qr_base64)
+    
+    attendee = Attendee(
+        name=name, 
+        linkedin=linkedin, 
+        category=category, 
+        photo=photo_path, 
+        qr_code=qr_path, 
+        qr_base64=qr_base64,
+        user_id=session['user_id']
+    )
     db.session.add(attendee)
     db.session.commit()
     flash(f"{name} a été ajouté(e) au répertoire !", "success")
     return redirect(url_for("index"))
+
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def edit_attendee(id):
+    attendee = Attendee.query.get_or_404(id)
+    user = User.query.get(session['user_id'])
+
+    if not user.is_admin and attendee.user_id != user.id:
+        flash("Vous ne pouvez modifier que vos propres participants depuis votre profil.", "danger")
+        return redirect(url_for('profile'))
+
+    if request.method == "POST":
+        attendee.name = request.form.get("name", "").strip()
+        attendee.linkedin = request.form.get("linkedin", "").strip()
+        attendee.category = request.form.get("category", "participant").strip()
+
+        if not attendee.linkedin.startswith("http"):
+            attendee.linkedin = "https://" + attendee.linkedin
+
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename != '':
+                if attendee.photo:
+                    old_path = os.path.join(BASE_DIR, "static", attendee.photo)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                attendee.photo = compress_and_save_photo(file)
+
+        db.session.commit()
+        flash(f"{attendee.name} a été modifié !", "success")
+        if user.is_admin:
+            return redirect(url_for('dashboard'))
+        else:
+            return redirect(url_for('profile'))
+
+    return render_template("edit.html", attendee=attendee)
+
+@app.route("/delete/<int:id>", methods=["POST"])
+@login_required
+def delete_attendee(id):
+    attendee = Attendee.query.get_or_404(id)
+    user = User.query.get(session['user_id'])
+
+    if not user.is_admin and attendee.user_id != user.id:
+        flash("Vous ne pouvez supprimer que vos propres participants depuis votre profil.", "danger")
+        return redirect(url_for('profile'))
+
+    if attendee.photo:
+        full = os.path.join(BASE_DIR, "static", attendee.photo)
+        if os.path.exists(full):
+            os.remove(full)
+    if attendee.qr_code:
+        full = os.path.join(BASE_DIR, "static", attendee.qr_code)
+        if os.path.exists(full):
+            os.remove(full)
+    db.session.delete(attendee)
+    db.session.commit()
+    flash("Participant supprimé.", "info")
+    if user.is_admin:
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('profile'))
 
 @app.route("/masterclasses")
 def masterclasses():
     sessions = Masterclass.query.all()
     return render_template("masterclasses.html", masterclasses=sessions)
 
-@app.route("/delete/<int:id>", methods=["POST"])
-def delete_attendee(id):
-    a = Attendee.query.get_or_404(id)
-    if a.photo:
-        full = os.path.join(BASE_DIR, "static", a.photo)
-        if os.path.exists(full):
-            os.remove(full)
-    if a.qr_code:
-        full = os.path.join(BASE_DIR, "static", a.qr_code)
-        if os.path.exists(full):
-            os.remove(full)
-    db.session.delete(a)
-    db.session.commit()
-    flash("Participant supprimé.", "info")
-    return redirect(url_for("index"))
+# ========== ROUTE DE TEST ==========
+@app.route("/test-simple")
+def test_simple():
+    return render_template("test_simple.html", date=datetime.now())
 
-@app.route("/fix-db")
-def fix_db():
-    import sqlite3
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("ALTER TABLE attendee ADD COLUMN qr_base64 TEXT")
-        conn.commit()
-        conn.close()
-        return "✅ Database fixed! <a href='/'>Go home</a>"
-    except:
-        return "✅ Database already has the column! <a href='/'>Go home</a>"
-
-@app.errorhandler(413)
-def too_large(e):
-    flash("Fichier trop volumineux. Maximum 20 MB.", "error")
-    return redirect(url_for("index"))
-
-@app.errorhandler(500)
-def server_error(e):
-    logger.error(f"500 error: {e}")
-    return "Internal server error. Check logs.", 500
+# ========== INIT ==========
 
 with app.app_context():
     db.create_all()
     seed_masterclasses()
+    create_admin()
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

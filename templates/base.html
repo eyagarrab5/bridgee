@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bridge Health Summit{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0A2540;
+            --secondary: #00A896;
+            --gradient-primary: linear-gradient(135deg, #0A2540 0%, #1B4F6E 100%);
+            --gradient-secondary: linear-gradient(135deg, #00A896 0%, #00C896 100%);
+        }
+        .hero {
+            background: var(--gradient-primary);
+            padding: 60px 0;
+            text-align: center;
+            color: white;
+        }
+        .hero-logo { font-size: 2.5rem; font-weight: 800; }
+        .hero-logo span { color: var(--secondary); }
+        .hero-tagline { font-size: 1.2rem; margin-top: 10px; opacity: 0.9; }
+        .hero-date { font-size: 1rem; margin-top: 5px; opacity: 0.8; }
+        .section-title { font-size: 1.3rem; font-weight: 700; margin: 30px 0 20px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .btn-back { background: var(--gradient-primary); color: white; padding: 10px 25px; border-radius: 30px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .btn-back:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .footer { text-align: center; margin: 30px 0; }
+        .form-wrapper { background: white; border-radius: 24px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin: 30px auto; }
+        .form-control { border-radius: 12px; border: 1.5px solid #e5e7eb; padding: 12px 16px; }
+        .form-control:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(0,168,150,0.1); }
+        .btn-submit { background: var(--gradient-secondary); color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 600; transition: all 0.3s; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,168,150,0.3); }
+        @media (max-width: 768px) {
+            .hero-logo { font-size: 1.8rem; }
+            .hero-tagline { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div style="background: var(--gradient-primary); padding: 15px 0;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; flex-wrap: wrap; gap: 15px;">
+        <a href="/" style="color: white; font-size: 1.3rem; font-weight: 700; text-decoration: none;">
+            <i class="fas fa-heartbeat"></i> BRIDGE <span style="color: var(--secondary);">HEALTH</span>
+        </a>
+        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <a href="/" style="color: white; text-decoration: none; padding: 8px 20px; border-radius: 40px;">🏠 Accueil</a>
+            <a href="/masterclasses" style="color: white; text-decoration: none; padding: 8px 20px; border-radius: 40px;">🎓 Masterclasses</a>
+            
+            {% if session and session.user_id %}
+            <div style="position: relative;">
+                <button onclick="toggleDropdown()" style="background: var(--secondary); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+                <div id="userDropdown" style="position: absolute; right: 0; top: 50px; background: white; min-width: 200px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: none; z-index: 100;">
+                    <div style="padding: 12px; background: var(--gradient-primary); color: white; border-radius: 12px 12px 0 0; text-align: center;">
+                        <strong>{{ session.username }}</strong>
+                    </div>
+                    {% if session.is_admin %}
+                    <a href="/dashboard" style="display: block; padding: 12px 16px; color: #333; text-decoration: none; border-bottom: 1px solid #eee;">📊 Dashboard</a>
+                    {% else %}
+                    <a href="/profile" style="display: block; padding: 12px 16px; color: #333; text-decoration: none; border-bottom: 1px solid #eee;">📋 Mon profil</a>
+                    {% endif %}
+                    <a href="/logout" style="display: block; padding: 12px 16px; color: #333; text-decoration: none;">🚪 Déconnexion</a>
+                </div>
+            </div>
+            {% else %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<script>
+    function toggleDropdown() {
+        var dropdown = document.getElementById('userDropdown');
+        if (dropdown.style.display === 'block') {
+            dropdown.style.display = 'none';
+        } else {
+            dropdown.style.display = 'block';
+        }
+    }
+    window.onclick = function(event) {
+        if (!event.target.closest('button')) {
+            var dropdown = document.getElementById('userDropdown');
+            if (dropdown && dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            }
+        }
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,232 +1,170 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THE BRIDGE 2026 — Attendee Portal</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
-<!-- ── Top nav ── -->
-<header class="topbar">
-  <div class="logo">
-    <div class="logo-mark">TB</div>
-    <div class="logo-text">THE <span>BRIDGE</span> 2026</div>
-  </div>
-  <nav class="nav">
-    <a href="{{ url_for('index') }}" class="active">Directory</a>
-    <a href="{{ url_for('masterclasses') }}">Masterclasses</a>
-  </nav>
-  <div class="event-chip"><i class="ti ti-map-pin"></i> 8 Juin · Radisson Blu Tunis</div>
-</header>
+{% block title %}Accueil - Bridge Health Summit{% endblock %}
 
-<!-- ── Hero ── -->
-<section class="hero">
-  <div class="hero-badge"><i class="ti ti-users"></i> Attendee Portal</div>
-  <h1>Attendee Directory</h1>
-  <p>Add participants, generate LinkedIn QR codes, and explore today's sessions.</p>
-  <div class="stats-row">
-    <div class="stat"><span class="stat-n">{{ counts.total }}</span><span class="stat-l">Total</span></div>
-    <div class="stat-div"></div>
-    <div class="stat"><span class="stat-n purple">{{ counts.masterclass }}</span><span class="stat-l">Masterclass</span></div>
-    <div class="stat-div"></div>
-    <div class="stat"><span class="stat-n blue">{{ counts.vip }}</span><span class="stat-l">VIP</span></div>
-    <div class="stat-div"></div>
-    <div class="stat"><span class="stat-n green">{{ counts.participant }}</span><span class="stat-l">Participant</span></div>
-  </div>
+{% block content %}
+
+<!-- GRAND HEADER -->
+<section class="hero" style="background: linear-gradient(135deg, #0A2540 0%, #1B4F6E 100%); padding: 80px 0; text-align: center; color: white; position: relative; overflow: hidden;">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-logo" style="font-size: 3rem; font-weight: 800;">BRIDGE <span style="color: #00A896;">HEALTH</span> SUMMIT</div>
+            <div class="hero-tagline" style="margin-top: 10px; font-size: 1.2rem;">Connecter les innovateurs de la santé</div>
+            <div class="hero-date" style="margin-top: 10px; opacity: 0.8;">Tunisia · 2026</div>
+        </div>
+    </div>
 </section>
 
-<!-- ── Flash messages ── -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% for cat, msg in messages %}
-    <div class="flash flash-{{ cat }}">
-      <i class="ti ti-{% if cat == 'success' %}circle-check{% elif cat == 'error' %}alert-circle{% else %}info-circle{% endif %}"></i>
-      {{ msg }}
-    </div>
-  {% endfor %}
-{% endwith %}
-
-<!-- ── Main layout ── -->
-<div class="main">
-
-  <!-- Sidebar form -->
-  <aside class="sidebar">
-    <h3>Add Attendee</h3>
-    <form action="{{ url_for('add_attendee') }}" method="POST" enctype="multipart/form-data" id="addForm">
-
-      <div class="form-group">
-        <label for="name">Full name</label>
-        <input type="text" id="name" name="name" placeholder="Dr. Amine Hamdi" required>
-      </div>
-
-      <div class="form-group">
-        <label>Photo</label>
-        <div class="upload-box" id="uploadBox" onclick="document.getElementById('photoInput').click()">
-          <i class="ti ti-camera" id="uploadIcon"></i>
-          <span id="uploadLabel">Upload or drag a photo</span>
-          <img id="photoPreview" src="" alt="" style="display:none; width:80px; height:80px; border-radius:50%; object-fit:cover; margin:8px auto 0;">
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+    <!-- STATISTIQUES -->
+    <div class="stats-section" style="margin-top: 100px; margin-bottom: 40px;">
+        <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+            <div class="col-md-3 col-6" style="flex: 1; min-width: 120px;">
+                <div class="stat-card" style="background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="stat-icon"><i class="fas fa-users" style="font-size: 2rem; color: #00A896;"></i></div>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: 800; color: #0A2540;">{{ counts.total }}</div>
+                    <div class="stat-label" style="color: #6c757d;">Total</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6" style="flex: 1; min-width: 120px;">
+                <div class="stat-card" style="background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="stat-icon"><i class="fas fa-chalkboard-user" style="font-size: 2rem; color: #00A896;"></i></div>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: 800; color: #0A2540;">{{ counts.masterclass }}</div>
+                    <div class="stat-label" style="color: #6c757d;">Masterclass</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6" style="flex: 1; min-width: 120px;">
+                <div class="stat-card" style="background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="stat-icon"><i class="fas fa-crown" style="font-size: 2rem; color: #00A896;"></i></div>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: 800; color: #0A2540;">{{ counts.vip }}</div>
+                    <div class="stat-label" style="color: #6c757d;">VIP</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6" style="flex: 1; min-width: 120px;">
+                <div class="stat-card" style="background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <div class="stat-icon"><i class="fas fa-user" style="font-size: 2rem; color: #00A896;"></i></div>
+                    <div class="stat-number" style="font-size: 2rem; font-weight: 800; color: #0A2540;">{{ counts.participant }}</div>
+                    <div class="stat-label" style="color: #6c757d;">Participants</div>
+                </div>
+            </div>
         </div>
-        <input type="file" id="photoInput" name="photo" accept="image/*" style="display:none">
-      </div>
-
-      <div class="form-group">
-        <label for="linkedin">LinkedIn URL</label>
-        <div class="input-icon-wrap">
-          <i class="ti ti-brand-linkedin input-icon"></i>
-          <input type="text" id="linkedin" name="linkedin" placeholder="linkedin.com/in/yourname" required>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Category</label>
-        <div class="cat-row">
-          <label class="cat-btn mc">
-            <input type="radio" name="category" value="masterclass"> Masterclass
-          </label>
-          <label class="cat-btn vip">
-            <input type="radio" name="category" value="vip" checked> VIP
-          </label>
-          <label class="cat-btn part">
-            <input type="radio" name="category" value="participant"> Participant
-          </label>
-        </div>
-      </div>
-
-      <button type="submit" class="submit-btn">
-        <i class="ti ti-qrcode"></i> Generate QR & Add
-      </button>
-    </form>
-  </aside>
-
-  <!-- Directory -->
-  <main class="content">
-    <div class="section-row">
-      <h2>All Attendees</h2>
-      <div class="filter-row">
-        <button class="filter-btn active" data-cat="all">All</button>
-        <button class="filter-btn" data-cat="masterclass">Masterclass</button>
-        <button class="filter-btn" data-cat="vip">VIP</button>
-        <button class="filter-btn" data-cat="participant">Participant</button>
-      </div>
     </div>
 
-    {% if attendees %}
-    <div class="attendee-grid" id="attendeeGrid">
-      {% for a in attendees %}
-      <div class="acard" data-cat="{{ a.category }}">
-        <div class="badge {{ a.category }}">{{ a.category | title }}</div>
-
-        {% if a.photo %}
-          <img src="{{ url_for('static', filename=a.photo) }}" class="avatar-img" alt="{{ a.name }}">
-        {% else %}
-          <div class="avatar av-{{ a.category }}">{{ a.name[:2].upper() }}</div>
-        {% endif %}
-
-        <h4>{{ a.name }}</h4>
-        <p class="linkedin-text">{{ a.linkedin | replace('https://','') | replace('http://','') | truncate(32) }}</p>
-
-        {% if a.qr_code %}
-          <div class="qr-wrap">
-            <img src="{{ url_for('static', filename=a.qr_code) }}" alt="QR code for {{ a.name }}" width="64" height="64">
-          </div>
-        {% endif %}
-
-        <a href="{{ a.linkedin }}" target="_blank" rel="noopener" class="ln-link">
-          <i class="ti ti-brand-linkedin"></i> LinkedIn
-        </a>
-
-        <form action="{{ url_for('delete_attendee', id=a.id) }}" method="POST"
-              onsubmit="return confirm('Remove {{ a.name }}?')">
-          <button type="submit" class="del-btn" title="Remove attendee">
-            <i class="ti ti-trash"></i>
-          </button>
+    <!-- FORMULAIRE -->
+    <div class="form-wrapper" style="background: white; border-radius: 20px; padding: 30px; margin: 30px 0; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+        <div class="section-title" style="font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; color: #0A2540;">
+            <i class="fas fa-user-plus" style="color: #00A896;"></i> Ajouter un participant
+        </div>
+        
+        {% if session and session.user_id %}
+        <form method="POST" action="/add" enctype="multipart/form-data">
+            <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="col-md-6" style="flex: 1; min-width: 200px;">
+                    <input type="text" class="form-control" name="name" placeholder="Nom complet" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div class="col-md-6" style="flex: 1; min-width: 200px;">
+                    <input type="url" class="form-control" name="linkedin" placeholder="URL LinkedIn" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div class="col-md-4" style="flex: 1; min-width: 150px;">
+                    <select class="form-select" name="category" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="participant">👤 Participant</option>
+                        <option value="masterclass">🎓 Masterclass</option>
+                        <option value="vip">👑 VIP</option>
+                    </select>
+                </div>
+                <div class="col-md-8" style="flex: 2; min-width: 250px;">
+                    <input type="file" class="form-control" name="photo" accept="image/*" capture="environment" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <small class="text-muted">📱 Photo depuis galerie ou appareil photo</small>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn-submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00A896 0%, #02C39A 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-save"></i> Ajouter au répertoire
+                    </button>
+                </div>
+            </div>
         </form>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">
-      <i class="ti ti-users-group"></i>
-      <p>No attendees yet. Be the first to add one!</p>
-    </div>
-    {% endif %}
-
-    <!-- Masterclass teaser -->
-    <div class="section-row" style="margin-top:2.5rem">
-      <h2>Today's Masterclasses</h2>
-      <a href="{{ url_for('masterclasses') }}" class="see-all">See all <i class="ti ti-arrow-right"></i></a>
-    </div>
-
-    <div class="mc-preview-grid">
-      {% for mc in masterclasses %}
-      <div class="mc-preview-card">
-        <div class="mc-num">{{ loop.index }}</div>
-        <div>
-          <h4>{{ mc.title }}</h4>
-          <div class="mc-meta-row">
-            <span class="mc-tag"><i class="ti ti-clock"></i> {{ mc.time_slot }}</span>
-            <span class="mc-tag"><i class="ti ti-map-pin"></i> {{ mc.room }}</span>
-          </div>
+        {% else %}
+        <div style="text-align: center; padding: 20px;">
+            <p>Veuillez vous <a href="/login" style="color: #00A896;">connecter</a> ou vous <a href="/signup" style="color: #00A896;">inscrire</a> pour ajouter des participants.</p>
         </div>
-      </div>
-      {% endfor %}
+        {% endif %}
     </div>
-  </main>
+
+    <!-- LISTE DES PARTICIPANTS -->
+    <div class="section-title" style="font-size: 1.3rem; font-weight: 700; margin: 30px 0 20px; color: #0A2540;">
+        <i class="fas fa-address-book" style="color: #00A896;"></i> Répertoire
+    </div>
+
+    <div class="participants-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin: 30px 0;">
+        {% for attendee in attendees %}
+        <div class="participant-card" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s;">
+            {% if attendee.photo %}
+                <img src="{{ url_for('static', filename=attendee.photo) }}" class="card-image" loading="lazy" decoding="async" style="width: 100%; height: 250px; object-fit: contain; background: #f8f9fa; padding: 10px;">
+            {% else %}
+                <div class="card-placeholder" style="height: 250px; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-user-circle" style="font-size: 70px; color: #ccc;"></i>
+                </div>
+            {% endif %}
+            <div class="card-content" style="padding: 15px;">
+                <div class="participant-name" style="font-size: 1.1rem; font-weight: 700; color: #0A2540;">{{ attendee.name }}</div>
+                {% if attendee.category == 'vip' %}
+                    <span class="badge-custom badge-vip" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; margin-bottom: 10px; background: linear-gradient(135deg, #F0A500, #E67E22); color: white;"><i class="fas fa-crown"></i> VIP</span>
+                {% elif attendee.category == 'masterclass' %}
+                    <span class="badge-custom badge-masterclass" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; margin-bottom: 10px; background: linear-gradient(135deg, #00A896, #02C39A); color: white;"><i class="fas fa-chalkboard"></i> Masterclass</span>
+                {% else %}
+                    <span class="badge-custom badge-participant" style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; margin-bottom: 10px; background: #e5e7eb; color: #374151;"><i class="fas fa-user"></i> Participant</span>
+                {% endif %}
+
+                {% if attendee.display_qr %}
+                <div class="qr-wrapper" style="background: #f8f9fa; border-radius: 12px; padding: 10px; text-align: center; margin: 10px 0;">
+                    <img src="{{ attendee.display_qr }}" class="qr-code" style="max-width: 80px; background: white; padding: 5px; border-radius: 8px;">
+                    <span class="qr-label" style="font-size: 0.6rem; color: #6c757d; display: block;"><i class="fas fa-camera"></i> Scannez avec votre téléphone</span>
+                </div>
+                {% endif %}
+
+                <div class="action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="{{ attendee.linkedin }}" target="_blank" class="btn-linkedin" style="background: #0A66C2; color: white; padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; text-decoration: none;"><i class="fab fa-linkedin"></i> Profil</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <a href="/masterclasses" class="btn-back">
+            <i class="fas fa-graduation-cap"></i> Voir les Masterclasses
+        </a>
+        <p class="text-muted mt-3 mb-0 small">© Bridge Health Summit 2026</p>
+    </div>
 </div>
 
-<script>
-// Photo preview
-document.getElementById('photoInput').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('photoPreview').src = e.target.result;
-    document.getElementById('photoPreview').style.display = 'block';
-    document.getElementById('uploadIcon').style.display = 'none';
-    document.getElementById('uploadLabel').textContent = file.name;
-  };
-  reader.readAsDataURL(file);
-});
+<style>
+    .stats-section { margin: 120px 0 30px 0; }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-icon { font-size: 2rem; color: var(--secondary); margin-bottom: 10px; }
+    .stat-number { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 0.9rem; color: #666; }
+    .participants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin: 30px 0; }
+    .participant-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .participant-card:hover { transform: translateY(-5px); }
+    .card-image { width: 100%; height: 250px; object-fit: contain; background: #f8f9fa; padding: 10px; }
+    .card-placeholder { width: 100%; height: 250px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #ccc; }
+    .card-content { padding: 15px; }
+    .participant-name { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .badge-custom { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; margin-bottom: 10px; }
+    .badge-vip { background: #fef3c7; color: #d97706; }
+    .badge-masterclass { background: #dbeafe; color: #2563eb; }
+    .badge-participant { background: #e5e7eb; color: #4b5563; }
+    .qr-wrapper { text-align: center; margin: 10px 0; }
+    .qr-code { width: 100px; height: 100px; border-radius: 8px; }
+    .qr-label { font-size: 0.7rem; color: #666; display: block; margin-top: 5px; }
+    .btn-linkedin { background: #0077b5; color: white; padding: 6px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; margin-right: 5px; }
+    .btn-delete { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+    @media (max-width: 768px) {
+        .participants-grid { grid-template-columns: 1fr; }
+    }
+</style>
 
-// Drag-over upload box
-const box = document.getElementById('uploadBox');
-box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag-over'); });
-box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
-box.addEventListener('drop', e => {
-  e.preventDefault(); box.classList.remove('drag-over');
-  const dt = e.dataTransfer;
-  if (dt.files.length) {
-    document.getElementById('photoInput').files = dt.files;
-    document.getElementById('photoInput').dispatchEvent(new Event('change'));
-  }
-});
-
-// Category radio highlight
-document.querySelectorAll('.cat-btn input').forEach(radio => {
-  radio.addEventListener('change', () => {
-    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
-    radio.parentElement.classList.add('selected');
-  });
-});
-// Set initial selected state
-document.querySelector('.cat-btn input:checked')?.parentElement.classList.add('selected');
-
-// Filter attendees
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const cat = btn.dataset.cat;
-    document.querySelectorAll('.acard').forEach(card => {
-      card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
-    });
-  });
-});
-</script>
-</body>
-</html>
+{% endblock %}

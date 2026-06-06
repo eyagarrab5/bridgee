@@ -1,80 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Masterclasses — THE BRIDGE 2026</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
-<header class="topbar">
-  <div class="logo">
-    <div class="logo-mark">TB</div>
-    <div class="logo-text">THE <span>BRIDGE</span> 2026</div>
-  </div>
-  <nav class="nav">
-    <a href="{{ url_for('index') }}">Directory</a>
-    <a href="{{ url_for('masterclasses') }}" class="active">Masterclasses</a>
-  </nav>
-  <div class="event-chip"><i class="ti ti-map-pin"></i> 8 Juin · Radisson Blu Tunis</div>
-</header>
+{% block title %}Masterclasses - Bridge Health Summit{% endblock %}
+
+{% block content %}
 
 <section class="hero">
-  <div class="hero-badge"><i class="ti ti-school"></i> Sessions du jour</div>
-  <h1>Masterclasses</h1>
-  <p>Deep-dive sessions led by industry experts — choose what resonates with you.</p>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-logo">MASTERCLASSES <span>EXCLUSIVES</span></div>
+            <div class="hero-tagline">Développez vos compétences avec nos experts</div>
+        </div>
+    </div>
 </section>
 
-<div class="mc-page-wrap">
-  {% for mc in masterclasses %}
-  <div class="mc-full-card">
-
-    <div class="mc-full-header">
-      <div class="mc-num-lg">{{ loop.index }}</div>
-      <div class="mc-full-meta">
-        <h2>{{ mc.title }}</h2>
-        <div class="mc-meta-row">
-          <span class="mc-tag"><i class="ti ti-user"></i> {{ mc.speaker }}</span>
-          <span class="mc-tag"><i class="ti ti-clock"></i> {{ mc.time_slot }}</span>
-          <span class="mc-tag"><i class="ti ti-map-pin"></i> {{ mc.room }}</span>
-        </div>
-      </div>
+<div class="container">
+    <div class="section-title">
+        <i class="fas fa-chalkboard-user"></i>
+        16h
     </div>
 
-    <div class="mc-full-body">
-      <div class="mc-description">
-        <p>{{ mc.description }}</p>
-        {% if mc.takeaway %}
-        <div class="takeaway-box">
-          <i class="ti ti-bolt"></i>
-          <div>
-            <span class="takeaway-label">Key takeaway</span>
-            <p>{{ mc.takeaway }}</p>
-          </div>
+    <div class="masterclass-grid">
+        {% for m in masterclasses %}
+        <div class="masterclass-card">
+            <div class="card-header">
+                <h3>{{ m.title }}</h3>
+                <div class="speaker"><i class="fas fa-user-circle"></i> {{ m.speaker }}</div>
+            </div>
+            <div class="card-body">
+                <div class="info-badges">
+                    <span class="info-badge time"><i class="far fa-clock"></i> {{ m.time_slot }}</span>
+                    <span class="info-badge room"><i class="fas fa-map-marker-alt"></i> {{ m.room }}</span>
+                </div>
+                <p class="description">{{ m.description }}</p>
+                <div class="takeaway">
+                    <strong><i class="fas fa-lightbulb"></i> À retenir :</strong> {{ m.takeaway }}
+                </div>
+                <a href="{{ m.video_url }}" target="_blank" class="btn-video"><i class="fas fa-video"></i> Voir la masterclass</a>
+            </div>
         </div>
-        {% endif %}
-      </div>
-
-      {% if mc.video_url %}
-      <div class="video-section">
-        <div class="video-label"><i class="ti ti-player-play"></i> Preview</div>
-        <div class="video-frame">
-          <iframe src="{{ mc.video_url }}"
-                  title="{{ mc.title }}"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen></iframe>
-        </div>
-      </div>
-      {% endif %}
+        {% endfor %}
     </div>
 
-  </div>
-  {% endfor %}
+    <div class="footer">
+        <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> Retour à l'accueil</a>
+        <p class="text-muted mt-3">© Bridge Health Summit 2026</p>
+    </div>
 </div>
 
-</body>
-</html>
+<style>
+    .masterclass-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; margin: 30px 0; }
+    .masterclass-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    .masterclass-card:hover { transform: translateY(-5px); }
+    .card-header { background: var(--gradient-primary); padding: 15px 20px; color: white; }
+    .card-header h3 { font-size: 1.1rem; margin-bottom: 5px; }
+    .speaker { font-size: 0.8rem; opacity: 0.9; }
+    .card-body { padding: 20px; }
+    .info-badges { margin-bottom: 10px; }
+    .info-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; margin-right: 8px; }
+    .info-badge.time { background: #e3f2fd; color: #1976d2; }
+    .info-badge.room { background: #fff3e0; color: #f57c00; }
+    .description { font-size: 0.85rem; color: #4a5568; margin: 10px 0; line-height: 1.4; }
+    .takeaway { background: #f0fdf4; border-left: 3px solid var(--secondary); padding: 10px; border-radius: 8px; margin: 15px 0; font-size: 0.8rem; }
+    .btn-video { background: var(--gradient-secondary); color: white; border: none; border-radius: 30px; padding: 8px 16px; font-size: 0.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    @media (max-width: 768px) {
+        .masterclass-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+{% endblock %}
